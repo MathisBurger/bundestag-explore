@@ -58,6 +58,6 @@ jobs:
           context: ./bundestag-ui
           push: true
           load: true
-          tags: ghcr.io/MathisBurger/bundestag-explore-ui:${{ github.ref_name }}
+          tags: ghcr.io/mathisburger/bundestag-explore-ui:${{ github.ref_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
