@@ -1,4 +1,5 @@
 from qdrant_client import QdrantClient
+from qdrant_client.http.models import TextIndexParams, TokenizerType, TextIndexType
 from qdrant_client.models import PayloadSchemaType
 from qdrant_client.models import Distance, VectorParams, SparseVectorParams
 from fastembed.embedding import DefaultEmbedding
@@ -32,25 +33,21 @@ def initialize_hybrid_collection(client, collection_name):
         },
         on_disk_payload=True
     )
+    client.create_payload_index(collection_name, "speaker", PayloadSchemaType.KEYWORD)
+    client.create_payload_index(collection_name, "party", PayloadSchemaType.KEYWORD)
+
+    client.create_payload_index(collection_name, "date", PayloadSchemaType.DATETIME)
+    client.create_payload_index(collection_name, "sachgebiete", PayloadSchemaType.KEYWORD)
+
+    client.create_payload_index(collection_name, "initiativen", PayloadSchemaType.KEYWORD)
+
     client.create_payload_index(
         collection_name=collection_name,
-        field_name="party",
-        field_schema=PayloadSchemaType.KEYWORD,
-    )
-    client.create_payload_index(
-        collection_name=collection_name,
-        field_name="speaker",
-        field_schema=PayloadSchemaType.KEYWORD,
-    )
-    client.create_payload_index(
-        collection_name=collection_name,
-        field_name="date",
-        field_schema=PayloadSchemaType.DATETIME,
-    )
-    client.create_payload_index(
-        collection_name=collection_name,
-        field_name="topic",
+        field_name="vorgangs_titel",
         field_schema=PayloadSchemaType.TEXT,
+        field_params=TextIndexParams(
+            type=TextIndexType.TEXT, tokenizer=TokenizerType.WORD, lowercase=True
+        )
     )
     print(f"Collection '{collection_name}' initialized successfully.")
 

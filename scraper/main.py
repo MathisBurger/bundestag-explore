@@ -92,7 +92,7 @@ def run_scraper():
 def run_scraper_loop():
     while True:
         run_scraper()
-        time.sleep(86400)
+        time.sleep(3600)
 
 if __name__ == "__main__":
     run_scraper()
