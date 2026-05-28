@@ -84,7 +84,6 @@ def ingest_data(client, speech_chunks, collection_name="bundestag_collection"):
                 "": dense_embeddings[idx].tolist(),  # Main dense vector
                 "text-sparse": qdrant_sparse  # Named sparse vector
             },
-            # The payload stores all the metadata you extracted for filtering later
             "payload": {
                 "speaker": chunk["speaker"],
                 "party": chunk["party"],
