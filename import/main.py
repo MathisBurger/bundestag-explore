@@ -1,4 +1,6 @@
+from datetime import datetime
 import time
+from zoneinfo import ZoneInfo
 
 from ingestion import create_client, ingest_data, initialize_hybrid_collection
 from chunking import get_all_chunks_to_import
@@ -20,5 +22,6 @@ if __name__ == '__main__':
                 print("Generated chunks")
                 ingest_data(client, chunks, "bundestag_collection")
                 print("Moving on to next document.")
+                db.mark_as_completed(doc_id=doc['protocol_id'], timestamp_str=datetime.now(ZoneInfo("Europe/Berlin")).strftime("%Y-%m-%d"))
 
         time.sleep(3600)
