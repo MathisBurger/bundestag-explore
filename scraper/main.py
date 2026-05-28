@@ -3,11 +3,12 @@ from datetime import datetime
 from mongo import MongoDBClient
 from s3 import S3Client
 from bundestag import BundestagAPI
+import time
 
 
 def run_scraper(mode="daily"):
     db = MongoDBClient()
-    s3 = S3Client()
+    s3_client = S3Client()
     api = BundestagAPI()
 
     start_date = None
@@ -59,7 +60,7 @@ def run_scraper(mode="daily"):
                 continue
 
             s3_key = f"bundestag/wahlperiode_{wahlperiode}/protokoll_{sitzung}_{datum}.pdf"
-            if s3.upload_bytes(pdf_bytes, s3_key):
+            if s3_client.upload_bytes(pdf_bytes, s3_key):
                 protocol_data = {
                     "protocol_id": doc_id,
                     "parliament": "Bundestag",
@@ -68,7 +69,7 @@ def run_scraper(mode="daily"):
                     "datum": datum,
                     "vorgangsbezug": doc.get("vorgangsbezug", []),
                     "s3_storage": {
-                        "bucket": s3.bucket_name,
+                        "bucket": s3_client.bucket_name,
                         "pdf_key": s3_key
                     },
                     "pipeline_status": {
@@ -83,7 +84,17 @@ def run_scraper(mode="daily"):
         offset += limit
 
     print(f"[BEREIT] Scraper beendet. {total_new_docs} neue Protokolle verarbeitet.")
+    db.client.close()
 
+
+def run_scraper_loop(mode="daily"):
+    if mode == "full":
+        run_scraper(mode=mode)
+        return
+
+    while True:
+        run_scraper(mode="daily")
+        time.sleep(86400)
 
 if __name__ == "__main__":
     run_mode = "daily"

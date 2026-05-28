@@ -1,3 +1,4 @@
 .venv
 qdrant_storage
 .env
+s3_data
