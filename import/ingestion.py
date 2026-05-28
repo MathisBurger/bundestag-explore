@@ -44,9 +44,10 @@ def initialize_hybrid_collection(client, collection_name):
     client.create_payload_index(
         collection_name=collection_name,
         field_name="vorgangs_titel",
-        field_schema=PayloadSchemaType.TEXT,
-        field_params=TextIndexParams(
-            type=TextIndexType.TEXT, tokenizer=TokenizerType.WORD, lowercase=True
+        field_schema=TextIndexParams(
+            type=TextIndexType.TEXT,
+            tokenizer=TokenizerType.WORD,
+            lowercase=True
         )
     )
     print(f"Collection '{collection_name}' initialized successfully.")

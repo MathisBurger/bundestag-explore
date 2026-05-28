@@ -57,8 +57,6 @@ def get_all_chunks_to_import():
 
     try:
         pending_docs = db.get_pending_protocols()
-        if len(pending_docs) == 0:
-            return []
 
         for doc in pending_docs:
             meta = doc.get("meta_data", {})
