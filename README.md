@@ -11,5 +11,10 @@ And yet, information is one of the most important foundations of a functioning d
 Nobody has the time to read Bundestag transcripts in their free time. All the better that this chatbot can now be asked questions such as `What is the CDU’s position on pension reform?` or `What criticism has there been regarding The Left’s tax proposals?`, allowing users to ask their own individual questions and learn about the topics that personally affect them.
 
 
-> **NOTICE:** This is a private research project I did to learn more about RAG. Of course, you can fork it any extend it for your own interest, but I do not have any interest in operating it for profit. 
+> **NOTICE:** This is a private research project I did to learn more about RAG. Of course, you can fork it any extend it for your own interest, but I do not have any interest in operating it for profit.
 > Although it shows how easy it is to setup a simple RAG pipeline and help to improve society. Maybe more people should do the same!
+
+
+### Good to know
+
+The data starts from `2021-01-01` older data is currently not maintained.

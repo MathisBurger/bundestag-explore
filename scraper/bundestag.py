@@ -20,12 +20,11 @@ class BundestagAPI:
         except Exception as e:
             return None
 
-    def fetch_protocols(self, start_date=None, cursor=None, wahlperiode=21):
+    def fetch_protocols(self, start_date=None, cursor=None):
         params = {
             "f.zuordnung": "BT",
             "format": "json",
             "apikey": self.api_key,
-            "f.wahlperiode": wahlperiode,
         }
 
         if cursor:

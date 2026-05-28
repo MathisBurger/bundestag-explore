@@ -10,7 +10,7 @@ def run_scraper():
     db = MongoDBClient()
     api = BundestagAPI()
 
-    start_date = "2025-01-01"
+    start_date = "2021-01-01"
 
     last_date = db.get_last_scrape_date()
     if last_date:
@@ -24,7 +24,7 @@ def run_scraper():
     total_new_docs = 0
 
     while True:
-        data = api.fetch_protocols(start_date=start_date, cursor=cursor, wahlperiode=21)
+        data = api.fetch_protocols(start_date=start_date, cursor=cursor)
 
         if not data or "documents" not in data:
             print("[INFO] No further data found. Skip.")
