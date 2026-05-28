@@ -31,7 +31,8 @@ export default function App() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/v1/chat', {
+      const apiUrl = (window as any)._env_.API_URL;
+      const response = await fetch(`${apiUrl}/v1/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -51,3 +51,13 @@ jobs:
           tags: ghcr.io/MathisBurger/bundestag-explore-backend:${{ github.ref_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Build UI
+        uses: docker/build-push-action@v5
+        with:
+          context: ./bundestag-ui
+          push: true
+          load: true
+          tags: ghcr.io/MathisBurger/bundestag-explore-ui:${{ github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
