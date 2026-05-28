@@ -1,5 +1,7 @@
 import sys
 from datetime import datetime
+from zoneinfo import ZoneInfo
+
 from mongo import MongoDBClient
 from bundestag import BundestagAPI
 import time
@@ -75,10 +77,11 @@ def run_scraper():
                     "vorgangsbezug_anzahl": doc.get("vorgangsbezug_anzahl"),
                     "wahlperiode": doc.get("wahlperiode"),
                     "vorgangsbezug": angereicherte_vorgaenge,
+                    "herausgeber": doc.get("herausgeber"),
                 },
                 "text": doc.get("text"),
                 "pipeline_status": {
-                    "scraped_at": datetime.utcnow().isoformat(),
+                    "scraped_at": datetime.now(ZoneInfo("Europe/Berlin")).strftime("%Y-%m-%d"),
                     "embedding_status": "pending",
                     "embedded_at": None
                 }

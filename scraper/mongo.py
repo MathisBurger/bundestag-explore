@@ -27,7 +27,7 @@ class MongoDBClient:
 
     def get_last_scrape_date(self):
         last_doc = self.collection.find_one(
-            {"parliament": "Bundestag"},
-            sort=[("datum", -1)]
+            {"meta_data.herausgeber": "BT"},
+            sort=[("pipeline_status.scraped_at", -1)]
         )
-        return last_doc["datum"] if last_doc else None
+        return last_doc["pipeline_status"]["scraped_at"] if last_doc else None

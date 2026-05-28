@@ -9,5 +9,4 @@ COPY . .
 
 ENV PYTHONUNBUFFERED=1
 
-ENTRYPOINT ["python", "orchestrator.py"]
-CMD ["daily"]
+ENTRYPOINT ["python", "main.py"]
