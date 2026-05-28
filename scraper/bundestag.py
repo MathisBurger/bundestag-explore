@@ -8,17 +8,28 @@ load_dotenv()
 class BundestagAPI:
     def __init__(self):
         self.api_key = os.environ["BUNDESTAG_API_KEY"]
-        self.base_url = "https://search.dip.bundestag.de/api/v1/plenarprotokoll"
+        self.base_url = "https://search.dip.bundestag.de/api/v1/plenarprotokoll-text"
 
-    def fetch_protocols(self, start_date=None, offset=0, limit=50, wahlperiode):
+    def fetch_vorgang_details(self, vorgang_id):
+        url = f"https://search.dip.bundestag.de/api/v1/vorgang/{vorgang_id}"
+        params = {"format": "json", "apikey": self.api_key}
+        try:
+            response = requests.get(url, params=params)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return None
+
+    def fetch_protocols(self, start_date=None, cursor=None, wahlperiode=21):
         params = {
             "f.zuordnung": "BT",
             "format": "json",
             "apikey": self.api_key,
-            "limit": limit,
             "f.wahlperiode": wahlperiode,
-            "offset": offset
         }
+
+        if cursor:
+            params["cursor"] = cursor
 
         if start_date:
             params["f.datum.start"] = start_date
@@ -27,15 +38,5 @@ class BundestagAPI:
             response = requests.get(self.base_url, params=params)
             response.raise_for_status()
             return response.json()
-        except Exception as e:
-            print(f"[API ERROR] Error while requesting bundestag(Offset {offset}): {e}")
-            return None
-
-    def download_pdf(self, url):
-        try:
-            res = requests.get(url)
-            res.raise_for_status()
-            return res.content
-        except Exception as e:
-            print(f"[API ERROR] Could not download PDF ({url}): {e}")
+        except:
             return None

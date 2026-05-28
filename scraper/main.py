@@ -1,104 +1,97 @@
 import sys
 from datetime import datetime
 from mongo import MongoDBClient
-from s3 import S3Client
 from bundestag import BundestagAPI
 import time
 
 
-def run_scraper(mode="daily"):
+def run_scraper():
     db = MongoDBClient()
-    s3_client = S3Client()
     api = BundestagAPI()
 
-    start_date = None
+    start_date = "2025-01-01"
 
-    if mode == "daily":
-        last_date = db.get_last_scrape_date()
-        if last_date:
-            print(f"[INFO] Last scraped entry is from {last_date}. Starting at this date.")
-            start_date = last_date
-        else:
-            print("[INFO] No entries found. Skip.")
-            return
+    last_date = db.get_last_scrape_date()
+    if last_date:
+        print(f"[INFO] Last scraped entry is from {last_date}. Starting at this date.")
+        start_date = last_date
+    else:
+        print("Doing full instead.")
 
-    offset = 0
-    limit = 100
+
+    cursor = None
     total_new_docs = 0
 
     while True:
-        print(f"[INFO] Requesting API (Offset: {offset})")
-        data = api.fetch_protocols(start_date=start_date, offset=offset, limit=limit, wahlperiode=21)
+        data = api.fetch_protocols(start_date=start_date, cursor=cursor, wahlperiode=21)
 
         if not data or "documents" not in data:
             print("[INFO] No further data found. Skip.")
             break
 
         documents = data["documents"]
-        if not documents:
+        if not documents or len(documents) == 0:
             print("[INFO] No documents found. Skip.")
             break
+
+        if "cursor" in data:
+            cursor = data["cursor"]
+
+        print(f"Batch importing {len(documents)} documents.")
 
         for doc in documents:
             doc_id = str(doc.get("id"))
 
-            if db.protocol_exists(doc_id) and mode == "daily":
-                continue
-            elif db.protocol_exists(doc_id):
+            if db.protocol_exists(doc_id):
                 continue
 
-            wahlperiode = doc.get("wahlperiode")
-            sitzung = doc.get("nummer")
-            datum = doc.get("datum")
-            pdf_url = doc.get("pdf_url")
+            angereicherte_vorgaenge = []
+            flache_vorgaenge = doc.get("vorgangsbezug", [])
 
-            if not pdf_url:
-                continue
+            for v in flache_vorgaenge:
+                v_id = v.get("id")
+                if not v_id:
+                    continue
 
-            pdf_bytes = api.download_pdf(pdf_url)
-            if not pdf_bytes:
-                continue
+                details = api.fetch_vorgang_details(v_id)
 
-            s3_key = f"bundestag/wahlperiode_{wahlperiode}/protokoll_{sitzung}_{datum}.pdf"
-            if s3_client.upload_bytes(pdf_bytes, s3_key):
-                protocol_data = {
-                    "protocol_id": doc_id,
-                    "parliament": "Bundestag",
-                    "wahlperiode": wahlperiode,
-                    "sitzung": sitzung,
-                    "datum": datum,
-                    "vorgangsbezug": doc.get("vorgangsbezug", []),
-                    "s3_storage": {
-                        "bucket": s3_client.bucket_name,
-                        "pdf_key": s3_key
-                    },
-                    "pipeline_status": {
-                        "scraped_at": datetime.utcnow().isoformat(),
-                        "embedding_status": "pending",
-                        "embedded_at": None
+                if details:
+                    vorgangs_detail = {
+                        "id": v_id,
+                        "titel": details.get("titel"),
+                        "vorgangstyp": details.get("vorgangstyp"),
+                        "sachgebiet": details.get("sachgebiet", []),
+                        "beratungsstand": details.get("beratungsstand"),
+                        "abstract": details.get("abstract")
                     }
+                    angereicherte_vorgaenge.append(vorgangs_detail)
+                else:
+                    angereicherte_vorgaenge.append(v)
+
+            protocol_data = {
+                "protocol_id": doc_id,
+                "meta_data": {
+                    "vorgangsbezug_anzahl": doc.get("vorgangsbezug_anzahl"),
+                    "wahlperiode": doc.get("wahlperiode"),
+                    "vorgangsbezug": angereicherte_vorgaenge,
+                },
+                "text": doc.get("text"),
+                "pipeline_status": {
+                    "scraped_at": datetime.utcnow().isoformat(),
+                    "embedding_status": "pending",
+                    "embedded_at": None
                 }
-                db.save_protocol(protocol_data)
-                total_new_docs += 1
+            }
+            db.save_protocol(protocol_data)
+            total_new_docs += 1
 
-        offset += limit
-
-    print(f"[BEREIT] Scraper beendet. {total_new_docs} neue Protokolle verarbeitet.")
     db.client.close()
 
 
-def run_scraper_loop(mode="daily"):
-    if mode == "full":
-        run_scraper(mode=mode)
-        return
-
+def run_scraper_loop():
     while True:
-        run_scraper(mode="daily")
+        run_scraper()
         time.sleep(86400)
 
 if __name__ == "__main__":
-    run_mode = "daily"
-    if len(sys.argv) > 1 and sys.argv[1] == "full":
-        run_mode = "full"
-
-    run_scraper(mode=run_mode)
+    run_scraper()
