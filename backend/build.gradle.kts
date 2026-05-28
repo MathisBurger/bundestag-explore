@@ -20,6 +20,7 @@ dependencies {
     implementation("io.quarkus:quarkus-kotlin")
     implementation("io.quarkiverse.langchain4j:quarkus-langchain4j-qdrant")
     implementation("io.quarkiverse.langchain4j:quarkus-langchain4j-ollama")
+    implementation("dev.langchain4j:langchain4j-embeddings")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("io.quarkus:quarkus-arc")
     implementation("io.quarkus:quarkus-rest")
