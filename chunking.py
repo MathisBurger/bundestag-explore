@@ -1,97 +1,97 @@
 import fitz  # PyMuPDF
 import re
+import uuid
 
 def parse_bundestag_pdf_manual_structure_aware(pdf_path):
-    """
-    Parses a local Bundestag plenary transcript PDF and divides it into
-    structured, semantic speech units containing speaker, party, topic, and text content.
-    """
     doc = fitz.open(pdf_path)
 
-    # Baseline session metadata states before explicit topics or speakers are initialized
-    current_topic = "Sitzungseröffnung / Formalia (Session Opening)"
-    current_speaker = "Präsidium (Presidency)"
+    current_topic = "Sitzungseröffnung"
+    current_speaker = "Präsidium"
     current_party = "Amt"
 
-    speech_chunks = []
-    current_speech_text = []
+    all_final_chunks = [] # This will hold our small child chunks
 
-    # REGEX 1: Topic detection engine
-    # Looks inside the text stream for explicit declarations of agenda items (e.g., 'Tagesordnungspunkt 6' or 'Zusatzpunkt 8')
-    topic_pattern = re.compile(
-        r"(Tagesordnungspunkt(?:e)?\s+\d+|Zusatzpunkt(?:e)?\s+\d+)",
-        re.IGNORECASE
-    )
-
-    # REGEX 2: Main speaker detection engine
-    # Matches patterns like "Lars Klingbeil, Bundesminister der Finanzen:" or "Kay Gottschalk (AfD):"
-    # Negative lookbehind (?<!\bvon der\b) and similar rules ensure we do not trip over random party mentions.
     speaker_pattern = re.compile(
         r"^([A-ZÄÖÜ][a-zßäöü\-\s]+[A-ZÄÖÜ][a-zßäöü]+(?:,\s+(?:Bundesminister|Abgeordneter|Parl\.)\s+[\w\s]+)?)\s*(?:\(([^)]+)\))?:"
     )
+    topic_pattern = re.compile(r"(Tagesordnungspunkt(?:e)?\s+\d+|Zusatzpunkt(?:e)?\s+\d+)", re.IGNORECASE)
 
-    # CRITICAL: We skip pages 0-3 (0-indexed pages 0 to 3) because they contain the multi-column table of contents.
-    # Processing those early pages triggers false speaker changes since names are listed next to layout numbers.
-    # Real transcription delivery begins on Page 5 (index 4).
+    # Accumulator for text belonging to the active speech block
+    speech_buffer = []
+
+    def flush_current_speech():
+        """Helper to break a long speech into small searchable children attached to a parent context."""
+        nonlocal speech_buffer
+        if not speech_buffer:
+            return
+
+        full_speech_text = " ".join(speech_buffer)
+        parent_id = str(uuid.uuid4()) # Generate a unique link identifier
+
+        # Split the full speech text into smaller semantic chunks (e.g., roughly every 3-4 sentences)
+        # Using a simple sentence splitter for the prototype
+        sentences = re.split(r'(?<=[.!?])\s+', full_speech_text)
+
+        child_buffer = []
+        child_word_count = 0
+
+        for sentence in sentences:
+            child_buffer.append(sentence)
+            child_word_count += len(sentence.split())
+
+            # Once a child chunk reaches ~120 words (approx 150-200 tokens), lock it and save it
+            if child_word_count >= 120:
+                child_text = " ".join(child_buffer)
+                all_final_chunks.append({
+                    "id": str(uuid.uuid4()),
+                    "parent_id": parent_id,
+                    "speaker": current_speaker,
+                    "party": current_party,
+                    "topic": current_topic,
+                    "text": child_text,                 # Embedded & searched text
+                    "full_context": full_speech_text    # Handed to the LLM
+                })
+                child_buffer = []
+                child_word_count = 0
+
+        # Save any leftover sentences as the final child chunk
+        if child_buffer:
+            all_final_chunks.append({
+                "id": str(uuid.uuid4()),
+                "parent_id": parent_id,
+                "speaker": current_speaker,
+                "party": current_party,
+                "topic": current_topic,
+                "text": " ".join(child_buffer),
+                "full_context": full_speech_text
+            })
+        speech_buffer = []
+
+    # Main Loop
     for page_num in range(4, len(doc)):
-        page = doc[page_num]
-
-        # 'blocks' returns a list of layout structures sorted sequentially by column flows (top-to-bottom, left-to-right)
-        blocks = page.get_text("blocks")
-
-        for block in blocks:
-            # Clean up leading/trailing white spaces and remove harsh mid-line line breaks from layout wrappers
-            text_line = block[4].strip()
-            text_line = " ".join(text_line.split())
-
-            if not text_line or text_line.isdigit():
+        for block in doc[page_num].get_text("blocks"):
+            text_line = " ".join(block[4].strip().split())
+            if not text_line or text_line.isdigit() or "Deutscher Bundestag" in text_line:
                 continue
 
-            # Filter layout header signatures injected onto every single page of official logs
-            if "Deutscher Bundestag" in text_line and "Wahlperiode" in text_line:
-                continue
-
-            # STEP A: Check if a new Agenda Item (TOP) is explicitly mentioned or initialized in this block
-            topic_match = topic_pattern.search(text_line)
-            if topic_match:
-                # Capture the text slice starting from the Topic keyword to provide contextual description
-                start_idx = topic_match.start()
-                # We limit the text payload length to keep the metadata property succinct
+            if topic_pattern.search(text_line):
+                start_idx = topic_pattern.search(text_line).start()
                 current_topic = text_line[start_idx:start_idx + 120]
+                continue
 
-            # STEP B: Check for a main speaker change state
             speaker_match = speaker_pattern.match(text_line)
             if speaker_match:
-                # Prior to flushing out state parameters, dump the active speech block payload into memory
-                if current_speech_text:
-                    speech_chunks.append({
-                        "speaker": current_speaker,
-                        "party": current_party,
-                        "topic": current_topic,
-                        "text": " ".join(current_speech_text)
-                    })
-                    current_speech_text = []  # Reset buffer for upcoming speaker data
+                flush_current_speech() # Save previous speaker's split chunks
 
-                # Assign new global processing attributes from matched groups
                 current_speaker = speaker_match.group(1).strip()
-                current_party = speaker_match.group(2).strip() if speaker_match.group(2) else "Regierung / Präsidium"
+                current_party = speaker_match.group(2).strip() if speaker_match.group(2) else "Regierung"
 
-                # If conversational text immediately follows the colon on the same line, harvest it
-                remaining_text = text_line[speaker_match.end():].strip()
-                if remaining_text:
-                    current_speech_text.append(remaining_text)
+                remaining = text_line[speaker_match.end():].strip()
+                if remaining:
+                    speech_buffer.append(remaining)
                 continue
 
-            # STEP C: Append standard text elements into the current speaker's list buffer
-            current_speech_text.append(text_line)
+            speech_buffer.append(text_line)
 
-    # Clean and persist the final active speech queue item remaining after processing loops complete
-    if current_speech_text:
-        speech_chunks.append({
-            "speaker": current_speaker,
-            "party": current_party,
-            "topic": current_topic,
-            "text": " ".join(current_speech_text)
-        })
-
-    return speech_chunks
+    flush_current_speech() # Flush the absolute final speech block
+    return all_final_chunks

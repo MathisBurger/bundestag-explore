@@ -1,4 +1,5 @@
 from qdrant_client import QdrantClient
+from qdrant_client.models import PayloadSchemaType
 from qdrant_client.models import Distance, VectorParams, SparseVectorParams
 from fastembed.embedding import DefaultEmbedding
 from fastembed.sparse import SparseTextEmbedding
@@ -28,7 +29,28 @@ def initialize_hybrid_collection(client, collection_name):
         # BM42 is Qdrant's native fast lexical model
         sparse_vectors_config={
             "text-sparse": SparseVectorParams()
-        }
+        },
+        on_disk_payload=True
+    )
+    client.create_payload_index(
+        collection_name=collection_name,
+        field_name="party",
+        field_schema=PayloadSchemaType.KEYWORD,
+    )
+    client.create_payload_index(
+        collection_name=collection_name,
+        field_name="speaker",
+        field_schema=PayloadSchemaType.KEYWORD,
+    )
+    client.create_payload_index(
+        collection_name=collection_name,
+        field_name="date",
+        field_schema=PayloadSchemaType.DATETIME,
+    )
+    client.create_payload_index(
+        collection_name=collection_name,
+        field_name="topic",
+        field_schema=PayloadSchemaType.TEXT,
     )
     print(f"Collection '{collection_name}' initialized successfully.")
 
