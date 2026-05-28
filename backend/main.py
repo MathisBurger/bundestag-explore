@@ -1,9 +1,14 @@
+import os
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from qdrant_client import QdrantClient
 from sentence_transformers import SentenceTransformer
 from langchain_ollama import OllamaLLM
 from models import ChatRequest, ChatResponse, Citation
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI(title="Bundestag Explore AI Backend")
 
@@ -16,8 +21,8 @@ app.add_middleware(
 )
 
 embedding_model = SentenceTransformer("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
-qdrant_client = QdrantClient(url="http://localhost:6333")
-ollama_client = OllamaLLM(base_url="http://localhost:11434", model="qwen2.5:1.5b")
+qdrant_client = QdrantClient(url=f"http://{os.environ["QDRANT_HOST"]}:6333")
+ollama_client = OllamaLLM(base_url=f"http://{os.environ["OLLAMA_HOST"]}:11434", model=os.environ["OLLAMA_MODEL"])
 
 
 @app.post("/v1/chat", response_model=ChatResponse)
@@ -84,4 +89,4 @@ async def process_chat(request: ChatRequest):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8080)

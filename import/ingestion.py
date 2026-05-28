@@ -5,11 +5,12 @@ from qdrant_client.models import Distance, VectorParams, SparseVectorParams
 from fastembed.embedding import DefaultEmbedding
 from fastembed.sparse import SparseTextEmbedding
 import uuid
+import os
 
 NAMESPACE_BUNDESTAG = uuid.UUID('12345678-1234-5678-1234-567812345678')
 
 def create_client():
-    return QdrantClient(host="localhost", port=6333)
+    return QdrantClient(host=os.environ["QDRANT_HOST"], port=6333)
 
 
 def initialize_hybrid_collection(client, collection_name):
