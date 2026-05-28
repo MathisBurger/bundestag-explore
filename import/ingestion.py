@@ -4,6 +4,9 @@ from qdrant_client.models import PayloadSchemaType
 from qdrant_client.models import Distance, VectorParams, SparseVectorParams
 from fastembed.embedding import DefaultEmbedding
 from fastembed.sparse import SparseTextEmbedding
+import uuid
+
+NAMESPACE_BUNDESTAG = uuid.UUID('12345678-1234-5678-1234-567812345678')
 
 def create_client():
     return QdrantClient(host="localhost", port=6333)
@@ -78,17 +81,28 @@ def ingest_data(client, speech_chunks, collection_name="bundestag_collection"):
             "values": sparse_vector.values.tolist()
         }
 
+        unique_string = f"{chunk['protocol_id']}_{chunk['speaker']}_{idx}"
+        deterministic_uuid = str(uuid.uuid5(NAMESPACE_BUNDESTAG, unique_string))
+
         points.append({
-            "id": idx,
+            "id": deterministic_uuid,
             "vector": {
-                "": dense_embeddings[idx].tolist(),  # Main dense vector
-                "text-sparse": qdrant_sparse  # Named sparse vector
+                "": dense_embeddings[idx].tolist(),
+                "text-sparse": qdrant_sparse
             },
             "payload": {
                 "speaker": chunk["speaker"],
                 "party": chunk["party"],
                 "topic": chunk["topic"],
-                "text": chunk["text"]
+                "text": chunk["text"],
+                "full_context": chunk["full_context"],
+                "protocol_id": chunk["protocol_id"],
+                "mongo_id": chunk["mongo_id"],
+                "wahlperiode": chunk["wahlperiode"],
+                "date": chunk["date"],
+                "sachgebiete": chunk["sachgebiete"],
+                "initiativen": chunk["initiativen"],
+                "vorgangs_titel": chunk["vorgangs_titel"]
             }
         })
 
