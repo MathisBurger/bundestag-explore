@@ -58,7 +58,7 @@ def initialize_hybrid_collection(client, collection_name):
 
 def ingest_data(client, speech_chunks, collection_name="bundestag_collection"):
 
-    dense_model = DefaultEmbedding(model_name="BAAI/bge-small-en-v1.5")
+    dense_model = DefaultEmbedding(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
     # BM42 handles word frequencies and exact keyword token matches
     sparse_model = SparseTextEmbedding(model_name="Qdrant/bm25")
 

@@ -27,11 +27,8 @@ class MongoController:
         Updates the pipeline flag of a document to prevent re-processing.
         Takes either a string representation or a BSON ObjectId.
         """
-        if isinstance(doc_id, str):
-            doc_id = ObjectId(doc_id)
-
         self.collection.update_one(
-            {"_id": doc_id},
+            {"protocol_id": doc_id},
             {
                 "$set": {
                     "pipeline_status.embedding_status": "completed",
