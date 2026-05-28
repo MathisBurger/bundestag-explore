@@ -62,6 +62,7 @@ def run_scraper():
                         "vorgangstyp": details.get("vorgangstyp"),
                         "sachgebiet": details.get("sachgebiet", []),
                         "beratungsstand": details.get("beratungsstand"),
+                        "initialtive": details.get("initialtive", []),
                         "abstract": details.get("abstract")
                     }
                     angereicherte_vorgaenge.append(vorgangs_detail)
