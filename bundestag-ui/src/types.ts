@@ -2,6 +2,7 @@ export interface Citation {
   speaker: String;
   party: String;
   topic: String;
+  text: String;
 }
 
 export interface Message {

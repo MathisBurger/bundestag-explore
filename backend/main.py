@@ -55,7 +55,7 @@ async def process_chat(request: ChatRequest):
 
             context_segments.append(f"Redner: {speaker} ({party})\nText: {full_context}")
 
-            citations.append(Citation(speaker=speaker, party=party, topic=topic))
+            citations.append(Citation(speaker=speaker, party=party, topic=topic, text=hit.payload.get("text", "")))
 
         # Duplikate bei den Citations entfernen
         unique_citations = list({f"{c.speaker}-{c.party}": c for c in citations}.values())

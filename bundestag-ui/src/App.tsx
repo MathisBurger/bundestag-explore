@@ -6,13 +6,11 @@ export default function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [selectedParty, setSelectedParty] = useState<string | null>(null);
-  const [provider, setProvider] = useState<'ollama' | 'openai'>('ollama');
   const [isLoading, setIsLoading] = useState(false);
   const [activeCitations, setActiveCitations] = useState<Citation[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-Scroll zu neuesten Nachrichten
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -24,7 +22,6 @@ export default function App() {
     const userQuery = input;
     setInput('');
 
-    // User-Nachricht hinzufügen
     const userMessage: Message = {
       id: crypto.randomUUID(),
       role: 'user',
@@ -40,7 +37,6 @@ export default function App() {
         body: JSON.stringify({
           query: userQuery,
           party: selectedParty,
-          provider: provider
         } as ChatRequest)
       });
 
@@ -48,7 +44,6 @@ export default function App() {
 
       const data = await response.json();
 
-      // KI-Antwort + Citations hinzufügen
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
         role: 'assistant',
@@ -58,7 +53,7 @@ export default function App() {
 
       setMessages(prev => [...prev, assistantMessage]);
       if (data.citations && data.citations.length > 0) {
-        setActiveCitations(data.citations); // Zeige die neuesten Quellen im rechten Panel
+        setActiveCitations(data.citations);
       }
     } catch (error) {
       setMessages(prev => [...prev, {
@@ -86,15 +81,6 @@ export default function App() {
 
           {/* Controls: Provider & Fraktion */}
           <div className="flex items-center gap-4">
-            <select
-              value={provider}
-              onChange={(e) => setProvider(e.target.value as 'ollama' | 'openai')}
-              className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-medium focus:outline-none focus:border-emerald-500 transition"
-            >
-              <option value="ollama">Local Model (Ollama)</option>
-              <option value="openai">GPT-4o (OpenAI)</option>
-            </select>
-
             <select
               value={selectedParty || ''}
               onChange={(e) => setSelectedParty(e.target.value ? e.target.value : null)}
@@ -202,7 +188,7 @@ export default function App() {
       <div className="w-96 h-full bg-slate-950/60 backdrop-blur-lg flex flex-col">
         <div className="px-6 py-5 border-b border-slate-800 flex items-center gap-2.5">
           <Layers className="w-5 h-5 text-emerald-400" />
-          <h2 className="font-bold tracking-wide">Qdrant Fact-Inspector</h2>
+          <h2 className="font-bold tracking-wide">Zitate</h2>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4 style-scrollbar">
@@ -235,7 +221,7 @@ export default function App() {
                   TOP: {cite.topic}
                 </div>
                 <p className="text-xs text-slate-400 italic leading-relaxed pt-1">
-                  "Der vollständige, strukturierte Textabschnitt wurde zur Synthese an das Modell ({provider}) übergeben."
+                  {cite.text}
                 </p>
               </div>
             ))
