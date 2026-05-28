@@ -19,6 +19,15 @@ services:
     environment:
       MONGO_INITDB_DATABASE: parlaments_data
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: bundestag_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_storage:/root/.ollama
+
 volumes:
   mongo_data:
   qdrant_storage:
+  ollama_storage:
