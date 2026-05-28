@@ -1,30 +1,15 @@
-# Bundestag Citizen RAG 🏛️🤖
+# Bundestag Explore
 
-An intelligent, citizen-centric information system for the semantic analysis of and research into plenary minutes of the German Bundestag.
+An intelligent and citizen-centric chatbot for the democratization of politics. 
 
-The system combines structured metadata from the official DIP API (such as *proceedings (Vorgänge)*, *subject areas (Sachgebiete)*, and *initiatives*) with a powerful **hybrid search method** (Dense Semantic Vectors + BM25 Sparse Vectors) in a Qdrant vector database. This enables citizens to analyze complex political debates, party positions, and specific quotes accurately, lightning-fast, and traceably.
+In today’s world, we increasingly face the problem that people are too easily politically influenced through social media.
 
----
+People fall for simplistic solutions offered by political extremes, and society is becoming more and more divided. One reason for this is certainly that it is incredibly difficult to stay fully up to date, and many topics discussed in the Bundestag are never even mentioned in the news because they are simply far too uninteresting for the next headline.
 
-## ⚠️ Current Project Status: Work in Progress (WIP)
+And yet, information is one of the most important foundations of a functioning democracy. This PoC tool is intended to demonstrate that AI can help make information more accessible to citizens.
 
-> **IMPORTANT NOTE:** This project is currently in an **active development phase (Work in Progress)**. The core architecture for data processing, metadata cleaning, and indexing is already stable. Features may change as development progresses. The user interface (Streamlit) and the LLM synthesis are currently undergoing final alignment and implementation.
+Nobody has the time to read Bundestag transcripts in their free time. All the better that this chatbot can now be asked questions such as `What is the CDU’s position on pension reform?` or `What criticism has there been regarding The Left’s tax proposals?`, allowing users to ask their own individual questions and learn about the topics that personally affect them.
 
----
 
-## 💡 Key Features
-
-* **Hierarchical Parent-Child Chunking:** To ensure extremely precise vector search, long speeches are broken down into small segments (~120 words). However, when a search match occurs, the entire context of the speech is passed to the LLM. This prevents hallucinations and ensures contextual depth.
-* **Advanced Metadata Indexing:** By linking MongoDB and the Bundestag's DIP API, the search can be precisely filtered by *speaker*, *political party*, *legislative period*, *date*, and official bill titles (*proceedings*).
-* **Hybrid Search (Dense + Lexical):** Combines dense embeddings (`BAAI/bge-small-en-v1.5`) for conceptual, meaning-based questions (e.g., "stance on social security") with `Qdrant/bm25` sparse vectors for exact keyword and quote verification in the German language.
-* **Memory-Optimized Scaling:** By enabling Qdrant's `on_disk_payload` mode, large text contexts remain on disk and do not strain the RAM. This is perfectly designed for scaling to hundreds of documents.
-
----
-
-## 🏗️ Planned Roadmap & Next Steps
-
-- [x] **Phases 1 & 2:** Plenary minutes parser with automatic agenda item recognition (*TOPs*).
-- [x] **Phase 3:** MongoDB infrastructure connection (`mongo.py`) and flat metadata transformation for complex proceedings data.
-- [x] **Phase 4:** Qdrant schema optimization with dedicated keyword, datetime, and full-text search indexes.
-- [ ] **Phase 5 (In Progress):** Implementation of the interactive Streamlit web interface for citizens.
-- [ ] **Phase 6 (In Progress):** RAG synthesis and answer generation using local LLMs (Ollama) or the OpenAI API.
+> **NOTICE:** This is a private research project I did to learn more about RAG. Of course, you can fork it any extend it for your own interest, but I do not have any interest in operating it for profit. 
+> Although it shows how easy it is to setup a simple RAG pipeline and help to improve society. Maybe more people should do the same!
