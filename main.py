@@ -1,10 +1,9 @@
 from chunking import parse_bundestag_pdf_manual_structure_aware
 
 if __name__ == '__main__':
-    pdf_pfad = "/Users/mburger/Downloads/21081.pdf"
+    pdf_pfad = "/Users/mburger/Downloads/21080.pdf"
     daten = parse_bundestag_pdf_manual_structure_aware(pdf_pfad)
 
-    # Ausgabe zur Kontrolle (Die ersten 3 Reden)
     print(f"Erfolgreich {len(daten)} Redebeiträge extrahiert.\n")
     for i, chunk in enumerate(daten):
         print(f"--- BEITRAG {i + 1} ---")
