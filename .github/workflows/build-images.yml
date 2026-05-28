@@ -28,7 +28,7 @@ jobs:
           context: ./scraper
           push: true
           load: true
-          tags: ghcr.io/MathisBurger/bundestag-explore-scraper:${{ github.ref_name }}
+          tags: ghcr.io/mathisburger/bundestag-explore-scraper:${{ github.ref_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -38,7 +38,7 @@ jobs:
           context: ./import
           push: true
           load: true
-          tags: ghcr.io/MathisBurger/bundestag-explore-import:${{ github.ref_name }}
+          tags: ghcr.io/mathisburger/bundestag-explore-import:${{ github.ref_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -48,7 +48,7 @@ jobs:
           context: ./backend
           push: true
           load: true
-          tags: ghcr.io/MathisBurger/bundestag-explore-backend:${{ github.ref_name }}
+          tags: ghcr.io/mathisburger/bundestag-explore-backend:${{ github.ref_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
