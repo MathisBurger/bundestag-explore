@@ -3,6 +3,9 @@ import time
 from ingestion import create_client, ingest_data, initialize_hybrid_collection
 from chunking import get_all_chunks_to_import
 from mongo import MongoController
+from dotenv import load_dotenv
+
+load_dotenv()
 
 if __name__ == '__main__':
     client = create_client()
@@ -12,7 +15,10 @@ if __name__ == '__main__':
         pending_docs = db.get_pending_protocols()
         if len(pending_docs) > 0:
             for doc in pending_docs:
+                print(f"Processing document {doc['protocol_id']}")
                 chunks = get_all_chunks_to_import(doc)
+                print("Generated chunks")
                 ingest_data(client, chunks, "bundestag_collection")
+                print("Moving on to next document.")
 
         time.sleep(3600)
